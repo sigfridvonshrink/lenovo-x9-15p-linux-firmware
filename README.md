@@ -31,10 +31,8 @@ Once installed you get:
 
 ## 0. Does this apply to me?
 
-Made for the **X9-15p Gen 1 (2026, Panther Lake)**. It also adapts to close siblings
-(X9-14 Gen 1 2026, some X1 2026) because the installer keys off the exact firmware names
-*your* kernel requests, not hardcoded ones. If you're on the **2025 X9-15 Gen 1 (Lunar
-Lake)**, you don't need this — update `linux-firmware` instead.
+Made for the **X9-15p Gen 1 (2026, Panther Lake)**. If you're on the **2025 X9-15 Gen 1
+(Lunar Lake)**, you don't need this — update `linux-firmware` instead.
 
 Check you actually have the gap:
 
