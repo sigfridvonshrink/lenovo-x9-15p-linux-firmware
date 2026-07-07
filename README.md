@@ -174,6 +174,24 @@ sudo systemctl enable --now x9-15-tof.service
 
 ---
 
+## 6. Bluetooth (optional) — if it's unstable
+
+The Bluetooth radio (Intel Panther Lake **CNVi**, `btintel_pcie`) works out of the
+box, but on early firmware it can drop connections or fail to scan
+(`Opcode 0x2042 failed: -112`, `boot_stage` warnings). **This is not a Windows-driver
+gap** — Intel ships the Linux `.sfi` only through `linux-firmware`, and the Windows
+blob won't load. The fix is a newer *upstream* firmware:
+
+```bash
+sudo ./bluetooth/update-bt-firmware.sh
+```
+
+It downloads the exact `ibt-*-pci.sfi` your controller requests from upstream
+linux-firmware, installs it only if newer, and reloads the driver. Full explanation,
+verification, and rollback in [`bluetooth/BLUETOOTH.md`](bluetooth/BLUETOOTH.md).
+
+---
+
 ## How it survives kernel upgrades
 
 - Firmware in `/lib/firmware` is **not kernel-versioned**, so a new kernel reuses it.
