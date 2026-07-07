@@ -1,0 +1,13 @@
+# Never commit extracted proprietary firmware to this public repo.
+*.bin
+*.wmfw
+*.ri
+*.sfi
+*.cpd
+# Extracted Lenovo driver trees
+DRIVERS/
+drivers/
+*.exe
+# scratch
+*~
+*.log

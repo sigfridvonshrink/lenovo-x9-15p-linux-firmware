@@ -1,0 +1,12 @@
+[Unit]
+Description=Enable ThinkPad X9-15p Gen 1 (2026) ToF human-presence sensor IIO stream
+Documentation=https://github.com/sigfridvonshrink/lenovo-x9-15p-linux-firmware
+After=multi-user.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/sbin/x9-15-enable-tof-buffer
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

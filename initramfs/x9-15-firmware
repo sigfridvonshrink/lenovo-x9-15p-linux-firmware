@@ -1,0 +1,24 @@
+#!/bin/sh
+# initramfs-tools hook: bundle the X9-15 custom firmware into every initramfs and
+# self-heal the rootfs copies from the vault. Auto-runs on every kernel install.
+PREREQ=""
+prereqs(){ echo "$PREREQ"; }
+case "$1" in
+    prereqs) prereqs; exit 0 ;;
+esac
+. /usr/share/initramfs-tools/hook-functions
+
+VAULT=/usr/local/lib/x9-15-firmware
+[ -d "$VAULT" ] || exit 0
+
+# For every firmware file we vaulted: restore it to /lib/firmware if a package
+# upgrade or cleanup removed it, then bundle it into the initramfs.
+find "$VAULT" -type f | while read -r vf; do
+    rel="${vf#"$VAULT"/}"
+    if [ ! -e "/lib/firmware/$rel" ]; then
+        mkdir -p "/lib/firmware/$(dirname "$rel")"
+        cp -a "$vf" "/lib/firmware/$rel"
+    fi
+    copy_file firmware "/lib/firmware/$rel" "$rel" || true
+done
+exit 0
