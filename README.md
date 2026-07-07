@@ -54,33 +54,46 @@ Requirements: Debian **trixie/sid** (or any recent distro with the `cs35l56` and
 
 ## 1. Get the Lenovo driver package
 
-From Lenovo Support → your X9-15 → **Drivers & Software**, download **both**:
+Open your machine's **driver-list** page on Lenovo Support and download these
+categories (you'll unpack them, not run them):
 
-- **Audio driver** (Realtek/Cirrus SmartAmp package) — contains the CS35L57 speaker
-  tuning + the `.wmfw`.
-- **Camera/Sensor / Integrated Sensor Solution** package — contains the ISH sensor-hub
-  firmware (`ishS_SI_*.bin`) and the ToF/ALS/accel definitions.
+- **Audio** — Cirrus/Realtek SmartAmp package → CS35L57 speaker tuning + `.wmfw`.
+- **Camera** — may carry sensor/ToF pieces.
+- **Motherboard devices** — the Intel Sensor Hub (ISH) firmware (`ishS_SI_*.bin`).
+
+Between the three you get everything (speakers, ISH boot, ALS/accel/ToF).
+
+Driver list for the X9-15p Gen 1 (machine type **21VV**):
+<https://pcsupport.lenovo.com/ag/en/products/laptops-and-netbooks/thinkpad-x-series-laptops/thinkpad-x9-15p-gen-1-type-21vv-21vw/21vv/21vvcto1ww/downloads/driver-list/>
+
+> If your machine type differs (e.g. 21VW), find it via
+> <https://pcsupport.lenovo.com> → your model → Drivers & Software. Categories and
+> versions evolve over time — that's fine: the installer keys off the firmware names
+> *your* kernel requests, so newer driver releases still work. Don't hardcode a version.
 
 They're `.exe` installers. You don't run them — you just unpack them.
 
 ## 2. Unpack it on Linux
 
+Unpack each downloaded `.exe` into its own folder under one parent:
+
 ```bash
 mkdir -p ~/x9drivers && cd ~/x9drivers
-7z x /path/to/<audio-driver>.exe   -o audio
-7z x /path/to/<sensor-driver>.exe  -o sensor
+7z x /path/to/<audio>.exe   -o audio
+7z x /path/to/<camera>.exe  -o camera
+7z x /path/to/<mb-devices>.exe -o motherboard
 # or, if 7z can't: innoextract /path/to/<driver>.exe
 ```
 
-You want the tree that contains a top-level `DRIVERS/` (or the `CS/` and `Sensor/`
-folders). Point the installer at whatever directory holds them — it searches
-recursively, so the common parent of both extracted packages is fine:
+Point the installer at the **common parent** (`~/x9drivers`) — it searches recursively,
+so it doesn't matter which package a file came from:
 
 ```
 ~/x9drivers/            <-- pass this
-├── audio/…/CS/XU_Ext/lenovo/tn/35L57/2355/dflt/b2_dflt_SS1_2355_*_l1u0.bin  (speaker tuning)
-├── audio/…/…/fw/35L56/…/b2_dflt_35l56_*.wmfw                                (speaker DSP fw)
-└── sensor/…/Lenovo/FwImage/0004/ishS_SI_5.8.1.7779.bin                      (ISH firmware)
+├── audio/…/CS/XU_Ext/lenovo/tn/35L57/2355/dflt/b2_dflt_SS1_2355_*_l1u0.bin   (speaker tuning)
+├── audio/…/…/fw/35L56/…/b2_dflt_35l56_*.wmfw                                 (speaker DSP fw)
+└── …/…/Lenovo/FwImage/0004/ishS_SI_5.8.1.7779.bin                            (ISH firmware — in
+                                                                     the Camera or Motherboard pkg)
 ```
 
 ## 3. Install
