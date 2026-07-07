@@ -1,5 +1,10 @@
 # Lenovo ThinkPad X9-15p Gen 1 (2026) — speaker & sensor firmware for Linux
 
+> ℹ️ **Heads-up:** this was largely put together by driving an AI coding agent — but the
+> result is **100% working on my own X9-15p Gen 1** (Debian **sid**, kernel **7.1.3**).
+> Every firmware name, mapping, and the ISH quirk was verified on my real X9-15p
+> hardware, not guessed. Feedback and fixes welcome.
+
 Brings up the hardware that Linux can't drive out of the box on the **ThinkPad
 X9-15p Gen 1 (2026, Panther Lake — project "Poseidon")** because the firmware isn't in
 `linux-firmware` yet — by extracting it from Lenovo's official Windows driver package.
@@ -47,8 +52,10 @@ intel_ish_ipc ...: firmware: failed to load intel/ish/ish_ptl_53c4ffad_6a9af742_
 …you're in the right place. (Your `17aaXXXX` / hash values may differ — that's fine.)
 
 Requirements: Debian **trixie/sid** (or any recent distro with the `cs35l56` and
-`intel-ish` drivers — kernel ≥ 6.11ish), `initramfs-tools`, and one of `7z` /
-`p7zip-full` or `innoextract` to unpack the Windows driver.
+`intel-ish` drivers — kernel ≥ 6.11ish) and `initramfs-tools`. You also need a way to
+run the Lenovo installers on **Windows** to extract the firmware (the factory Windows
+partition, a Windows To Go USB, or any other Windows PC) — see step 2. They're
+license-gated and generally **won't** unpack with `7z`/`innoextract` on Linux.
 
 ---
 
@@ -73,27 +80,28 @@ Driver list for the X9-15p Gen 1 (machine type **21VV**):
 
 They're `.exe` installers. You don't run them — you just unpack them.
 
-## 2. Unpack it on Linux
+## 2. Extract the drivers (this part must be done on Windows)
 
-Unpack each downloaded `.exe` into its own folder under one parent:
+Lenovo's driver `.exe` files are **license-gated installers** — they refuse to unpack
+until you accept the EULA, so `7z`/`innoextract` on Linux won't get the files out. You
+have to run them on Windows once.
 
-```bash
-mkdir -p ~/x9drivers && cd ~/x9drivers
-7z x /path/to/<audio>.exe   -o audio
-7z x /path/to/<camera>.exe  -o camera
-7z x /path/to/<mb-devices>.exe -o motherboard
-# or, if 7z can't: innoextract /path/to/<driver>.exe
+On the factory Windows partition (or a Windows To Go USB, or any Windows PC):
+
+1. Run each downloaded driver installer and **accept the license** when prompted.
+2. Lenovo packages extract their payload to **`C:\DRIVERS\...`** (sometimes under `%TEMP%`).
+   Once the files are there you do **not** need to finish the actual device install —
+   you can cancel the setup wizard; the extracted `C:\DRIVERS` files are what you want.
+3. Copy the whole **`C:\DRIVERS`** folder to your Linux machine (USB stick, network share…).
+
+Then point the installer at that copied folder — it searches recursively, so it doesn't
+matter which package each file came from:
+
 ```
-
-Point the installer at the **common parent** (`~/x9drivers`) — it searches recursively,
-so it doesn't matter which package a file came from:
-
-```
-~/x9drivers/            <-- pass this
-├── audio/…/CS/XU_Ext/lenovo/tn/35L57/2355/dflt/b2_dflt_SS1_2355_*_l1u0.bin   (speaker tuning)
-├── audio/…/…/fw/35L56/…/b2_dflt_35l56_*.wmfw                                 (speaker DSP fw)
-└── …/…/Lenovo/FwImage/0004/ishS_SI_5.8.1.7779.bin                            (ISH firmware — in
-                                                                     the Camera or Motherboard pkg)
+DRIVERS/            <-- pass this (copied from C:\DRIVERS)
+├── …/CS/XU_Ext/lenovo/tn/35L57/2355/dflt/b2_dflt_SS1_2355_*_l1u0.bin   (speaker tuning)
+├── …/fw/35L56/…/b2_dflt_35l56_*.wmfw                                   (speaker DSP fw)
+└── …/Lenovo/FwImage/0004/ishS_SI_5.8.1.7779.bin                        (ISH firmware)
 ```
 
 ## 3. Install
@@ -101,7 +109,7 @@ so it doesn't matter which package a file came from:
 ```bash
 git clone https://github.com/sigfridvonshrink/lenovo-x9-15p-linux-firmware.git
 cd lenovo-x9-15p-linux-firmware
-sudo ./install.sh ~/x9drivers
+sudo ./install.sh /path/to/DRIVERS      # the folder you copied from C:\DRIVERS
 sudo reboot
 ```
 
@@ -174,7 +182,7 @@ sudo systemctl enable --now x9-15-tof.service
 - The initramfs hook (`/etc/initramfs-tools/hooks/x9-15-firmware`) runs automatically
   on **every** kernel install: it re-bundles the ISH firmware into the new initramfs
   and **self-heals** the `/lib/firmware` copies from the vault if anything removed them.
-- If a package upgrade ever clobbers a file, re-run `sudo ./install.sh ~/x9drivers`,
+- If a package upgrade ever clobbers a file, re-run `sudo ./install.sh /path/to/DRIVERS`,
   or just rebuild the initramfs (`sudo update-initramfs -u`) to trigger the self-heal.
 
 When `linux-firmware` eventually ships these files officially, the packaged versions
